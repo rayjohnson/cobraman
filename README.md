@@ -22,7 +22,7 @@ func main() {
 		Short: "my dofoo program",
 	}
 	manOpts := &man.GenerateManOptions{
-		ProgramName: "Dofoo " + version,
+		LeftFooter:  "Dofoo " + version,
 		Author:      "Foo Bar <foo@bar.com>",
 		Directory:   "/tmp",
 		Bugs:        `Bugs related to cobra-man can be filed at https://github.com/rjohnson/cobra-man`,
@@ -39,6 +39,9 @@ That will get you a man page `/tmp/dofoo.1`
 Here is the full set of options you may use:
 ```
 	// ProgramName is used in the man page header across all pages
+	// The default is to generate an all CAPS path like CMD-SUBCMD
+	// for each page.  Because this would instead make them the same
+	// for all pages it is probably best not to override.
 	ProgramName string
 
 	// What section to generate the pages 4 (1 is the default if not set)

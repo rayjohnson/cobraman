@@ -69,6 +69,9 @@ zap\-publish \- Publish into MQTT
 // do its job.
 type GenerateManOptions struct {
 	// ProgramName is used in the man page header across all pages
+	// The default is to generate an all CAPS path like CMD-SUBCMD
+	// for each page.  Because this would instead make them the same
+	// for all pages it is probably best not to override.
 	ProgramName string
 
 	// What section to generate the pages 4 (1 is the default if not set)
@@ -131,9 +134,6 @@ type GenerateManOptions struct {
 // GenerateManPages - build man pages for the passed in cobra.Command
 // and all of its children
 func GenerateManPages(cmd *cobra.Command, opts *GenerateManOptions) error {
-	if opts.ProgramName == "" {
-		opts.ProgramName = cmd.CommandPath() // TODO: this can't be right default
-	}
 	for _, c := range cmd.Commands() {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 			continue
@@ -203,6 +203,11 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	values.ProgramName = opts.ProgramName
 	values.LeftFooter = opts.LeftFooter
 	values.CenterHeader = opts.CenterHeader
+
+	values.ProgramName = strings.ToUpper(strings.Replace(cmd.CommandPath(), " ", "\\-", -1))
+	if opts.ProgramName != "" {
+		values.ProgramName = opts.ProgramName
+	}
 
 	values.Section = opts.Section
 	if values.Section == "" {
