@@ -92,4 +92,8 @@ Here is the full set of options you may use:
 	// inherited flags.  By default they will all be in the same OPZTIONS
 	// section.
 	GenSeprateInheritedFlags bool
+
+	// UseTemplate allows you to override the default go template used to
+	// generate the man pages with your own version.
+	UseTemplate string
 ```

@@ -122,6 +122,10 @@ type GenerateManOptions struct {
 	// inherited flags.  By default they will all be in the same OPZTIONS
 	// section.
 	GenSeprateInheritedFlags bool
+
+	// UseTemplate allows you to override the default go template used to
+	// generate the man pages with your own version.
+	UseTemplate string
 }
 
 // GenerateManPages - build man pages for the passed in cobra.Command
@@ -306,8 +310,16 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	// SEE ALSO section
 	values.HasSeeAlso, values.SeeAlsos = generateSeeAlso(cmd, values.Section)
 
-	temp, err := template.New("man").Parse(defaultManTemplate)
-	err = temp.Execute(w, values)
+	// Build the template and generate the man page
+	manTemplateStr := defaultManTemplate
+	if opts.UseTemplate != "" {
+		manTemplateStr = opts.UseTemplate
+	}
+	parsedTemplate, err := template.New("man").Parse(manTemplateStr)
+	if err != nil {
+		return err
+	}
+	err = parsedTemplate.Execute(w, values)
 	if err != nil {
 		return err
 	}
