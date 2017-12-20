@@ -200,7 +200,6 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	values := manStruct{}
 
 	// Header fields
-	values.ProgramName = opts.ProgramName
 	values.LeftFooter = opts.LeftFooter
 	values.CenterHeader = opts.CenterHeader
 
@@ -244,7 +243,7 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	if len(description) == 0 {
 		description = cmd.Short
 	}
-	values.Description = description
+	values.Description = simpleToTroff(description)
 
 	// Options
 	if opts.GenSeprateInheritedFlags {
@@ -363,8 +362,8 @@ func printFlags(buf *bytes.Buffer, flags *pflag.FlagSet) {
 			format += "]"
 		}
 		format += "\n%s\n"
-		str := fmt.Sprintf(format, backslashify(flag.DefValue), backslashify(flag.Usage))
-		buf.WriteString(strings.TrimRight(str, " \n"))
+		str := fmt.Sprintf(format, backslashify(flag.DefValue), backslashify(strings.TrimRight(flag.Usage), " \n")
+		buf.WriteString(str)
 	})
 }
 
