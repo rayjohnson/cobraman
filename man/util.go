@@ -16,7 +16,7 @@ var sanatizeReplacer *strings.Replacer
 
 func simpleToTroff(str string) string {
 	// Guessing this is already troff - so let it pass through
-	if str[0] == '.' {
+	if len(str) > 1 && str[0] == '.' {
 		return str
 	}
 

@@ -152,6 +152,9 @@ func GenerateManPages(cmd *cobra.Command, opts *GenerateManOptions) error {
 		separator = opts.CommandSeparator
 	}
 	basename := strings.Replace(cmd.CommandPath(), " ", separator, -1)
+	if basename == "" {
+		return fmt.Errorf("you need a command name to have a man page")
+	}
 	filename := filepath.Join(opts.Directory, basename+"."+section)
 	f, err := os.Create(filename)
 	if err != nil {
