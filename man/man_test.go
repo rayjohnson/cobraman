@@ -79,7 +79,25 @@ func TestGenerateManPage(t *testing.T) {
 	generateManPage(cmd, &opts, buf)
 	assert.Regexp(t, ".SH NAME\nbar\n", buf.String())
 
+	buf.Reset()
 	cmd = &cobra.Command{Use: "bar", Short: "going to"}
 	generateManPage(cmd, &opts, buf)
 	assert.Regexp(t, ".SH NAME\nbar .. going to", buf.String())
+
+	// Test Synopsis
+	assert.Regexp(t, ".SH SYNOPSIS\n.sp\n.SY bar", buf.String())
+
+	buf.Reset()
+	cmd = &cobra.Command{Use: "foo"}
+	cmd2 := &cobra.Command{Use: "cat", Run: func(cmd *cobra.Command, args []string) {}}
+	cmd3 := &cobra.Command{Use: "dog", Run: func(cmd *cobra.Command, args []string) {}}
+	cmd.AddCommand(cmd2, cmd3)
+	generateManPage(cmd, &opts, buf)
+	assert.Regexp(t, ".SH SYNOPSIS\n.sp\n.SY foo cat\n.RI . flags .\n.YS\n.SY foo dog", buf.String())
+
+	buf.Reset()
+	cmd = &cobra.Command{Use: "foo"}
+	cmd.Flags().String("thing", "", "string with no default")
+	generateManPage(cmd, &opts, buf)
+	assert.Regexp(t, ".SH SYNOPSIS\n.sp\n.SY foo\n.OP thing", buf.String())
 }

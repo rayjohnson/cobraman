@@ -36,9 +36,8 @@ const defaultManTemplate = `.TH "{{.ProgramName}}" "{{ .Section }}" "{{.CenterFo
 .SH NAME
 {{ .Name }}
 .SH SYNOPSIS
-.PP
-.B {{ .CommandPath }}
-{{ .SynFlags }}
+.sp
+{{ .Synopsis }}
 .SH DESCRIPTION
 .PP
 {{ .Description }}{{ if .HasFlags }}
@@ -177,7 +176,7 @@ type manStruct struct {
 	UseLine     string
 	CommandPath string
 	Description string
-	SynFlags    string
+	Synopsis    string
 
 	HasFlags          bool
 	Flags             string
@@ -237,12 +236,7 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	}
 
 	// SYNOPSIS
-	flags = cmd.Flags()
-	if flags.HasFlags() {
-		buf := new(bytes.Buffer)
-		printSynFlags(buf, flags)
-		values.SynFlags = buf.String()
-	}
+	values.Synopsis = generateSynopsis(cmd)
 	values.UseLine = cmd.UseLine()
 	values.CommandPath = cmd.CommandPath()
 
@@ -338,15 +332,39 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	return nil
 }
 
+func generateSynopsis(cmd *cobra.Command) string {
+	// So many ways one could do a synopsis.
+	buf := new(bytes.Buffer)
+	if cmd.HasSubCommands() {
+		for _, c := range cmd.Commands() {
+			// if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
+			// 	continue
+			// }
+			buf.WriteString(fmt.Sprintf(".SY %s\n", c.CommandPath()))
+			buf.WriteString(fmt.Sprintf(".RI [ flags ]\n"))
+			buf.WriteString(fmt.Sprintf(".YS\n"))
+		}
+	} else {
+		buf.WriteString(fmt.Sprintf(".SY %s\n", cmd.CommandPath()))
+		flags := cmd.Flags()
+		if flags.HasFlags() {			
+			printSynFlags(buf, flags)
+		}
+		buf.WriteString(fmt.Sprintf(".Ar < args >\n"))
+		buf.WriteString(fmt.Sprintf(".YS\n"))
+	}
+	return buf.String()
+}
+
 func printSynFlags(buf *bytes.Buffer, flags *pflag.FlagSet) {
 	flags.VisitAll(func(flag *pflag.Flag) {
 		if len(flag.Deprecated) > 0 || flag.Hidden {
 			return
 		}
 		if len(flag.Shorthand) > 0 && len(flag.ShorthandDeprecated) == 0 {
-			buf.WriteString(fmt.Sprintf(".RB [ \\-%s ]\n", flag.Shorthand))
+			buf.WriteString(fmt.Sprintf(".OP %s\n", flag.Shorthand))
 		} else {
-			buf.WriteString(fmt.Sprintf(".RB [ \\-\\-%s ]\n", backslashify(flag.Name)))
+			buf.WriteString(fmt.Sprintf(".OP %s\n", backslashify(flag.Name)))
 		}
 	})
 }
