@@ -2,7 +2,9 @@ package man
 
 import (
 	"os"
+	"bytes"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -48,4 +50,36 @@ func TestGenerateManPages(t *testing.T) {
 	checkForFile(t, "foo.1")
 	checkForFile(t, "foo_bar.1")
 
+}
+
+func TestGenerateManPage(t *testing.T) {
+	buf := new(bytes.Buffer)
+
+	cmd := &cobra.Command{Use: "foo"}
+	opts := GenerateManOptions{}
+
+	// Test header options
+	generateManPage(cmd, &opts, buf)
+	assert.Regexp(t, ".TH \"FOO\" \"1\" \".*\" \"\" \"\"", buf.String())
+
+	buf.Reset()
+	opts = GenerateManOptions{ LeftFooter: "kitty kat", CenterHeader: "Hello", CenterFooter: "meow", ProgramName: "Bobby", Section: "3" }
+	generateManPage(cmd, &opts, buf)
+	assert.Regexp(t, ".TH \"Bobby\" \"3\" \"meow\" \"kitty kat\" \"Hello\"", buf.String())
+
+	buf.Reset()
+	date, _ := time.Parse(time.RFC3339, "1968-06-21T15:04:05Z")
+	opts = GenerateManOptions{ Date: &date }
+	generateManPage(cmd, &opts, buf)
+	assert.Regexp(t, ".TH \"FOO\" \"1\" \"Jun 1968\" \"\" \"\"", buf.String())
+
+	// Test name
+	cmd = &cobra.Command{Use: "bar"}
+	opts = GenerateManOptions{}
+	generateManPage(cmd, &opts, buf)
+	assert.Regexp(t, ".SH NAME\nbar\n", buf.String())
+
+	cmd = &cobra.Command{Use: "bar", Short: "going to"}
+	generateManPage(cmd, &opts, buf)
+	assert.Regexp(t, ".SH NAME\nbar .. going to", buf.String())
 }

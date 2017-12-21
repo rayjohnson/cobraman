@@ -29,11 +29,12 @@ import (
 )
 
 const defaultManTemplate = `.TH "{{.ProgramName}}" "{{ .Section }}" "{{.CenterFooter}}" "{{.LeftFooter}}" "{{.CenterHeader}}" 
+.\" disable hyphenation
 .nh
+.\" disable justification (adjust text to left margin only)
 .ad l
 .SH NAME
-.PP
-zap\-publish \- Publish into MQTT
+{{ .Name }}
 .SH SYNOPSIS
 .PP
 .B {{ .CommandPath }}
@@ -229,15 +230,19 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 
 	// NAME
 	dashCommandName := strings.Replace(cmd.CommandPath(), " ", "-", -1)
-	values.Name = fmt.Sprintf("%s \\- %s\n", dashCommandName, backslashify(cmd.Short))
+	if cmd.Short == "" {
+		values.Name = fmt.Sprintf("%s", dashCommandName)
+	} else {
+		values.Name = fmt.Sprintf("%s \\- %s", dashCommandName, backslashify(cmd.Short))
+	}
+
+	// SYNOPSIS
 	flags = cmd.Flags()
 	if flags.HasFlags() {
 		buf := new(bytes.Buffer)
 		printSynFlags(buf, flags)
 		values.SynFlags = buf.String()
 	}
-
-	// SYNOPSIS
 	values.UseLine = cmd.UseLine()
 	values.CommandPath = cmd.CommandPath()
 
