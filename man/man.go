@@ -45,7 +45,7 @@ const defaultManTemplate = `.TH "{{.ProgramName}}" "{{ .Section }}" "{{.CenterFo
 {{ .Flags }}{{ end }}{{ if .HasInheritedFlags }}
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
 {{ .InheritedFlags }}{{ end }}{{ if .HasEnvironment }}
-.SH Environment
+.SH ENVIRONMENT
 .PP
 {{ .Environment }}{{ end }}{{ if .HasFiles }}
 .SH FILES
@@ -268,42 +268,46 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	}
 
 	// ENVIRONMENT section
-	if opts.Environment != "" || cmd.Annotations["man-environment-section"] != "" {
+	altEnvironmentSection, _ := cmd.Annotations["man-environment-section"]
+	if opts.Environment != "" || altEnvironmentSection != "" {
 		values.HasEnvironment = true
-		if cmd.Annotations["man-environment-section"] != "" {
-			values.Environment = simpleToTroff(cmd.Annotations["man-environment-section"])
+		if altEnvironmentSection != "" {
+			values.Environment = simpleToTroff(altEnvironmentSection)
 		} else {
 			values.Environment = simpleToTroff(opts.Environment)
 		}
 	}
 
 	// FILES section
-	if opts.Files != "" || cmd.Annotations["man-files-section"] != "" {
+	altFilesSection, _ := cmd.Annotations["man-files-section"]
+	if opts.Files != "" || altFilesSection != "" {
 		values.HasFiles = true
-		if cmd.Annotations["man-files-section"] != "" {
-			values.Files = simpleToTroff(cmd.Annotations["man-files-section"])
+		if altFilesSection != "" {
+			values.Files = simpleToTroff(altFilesSection)
 		} else {
 			values.Files = simpleToTroff(opts.Files)
 		}
 	}
 
 	// BUGS section
-	if opts.Bugs != "" || cmd.Annotations["man-bugs-section"] != "" {
+	altBugsSection, _ := cmd.Annotations["man-bugs-section"]
+	if opts.Bugs != "" || altBugsSection != "" {
 		values.HasBugs = true
-		if cmd.Annotations["man-bugs-section"] != "" {
-			values.Bugs = simpleToTroff(cmd.Annotations["man-bugs-section"])
+		if altBugsSection != "" {
+			values.Bugs = simpleToTroff(altBugsSection)
 		} else {
 			values.Bugs = simpleToTroff(opts.Bugs)
 		}
 	}
 
 	// EXAMPLES section
-	if cmd.Example != "" || cmd.Annotations["man-examples-section"] != "" {
+	altExampleSection, _ := cmd.Annotations["man-examples-section"]
+	if cmd.Example != "" || altExampleSection != "" {
 		values.HasExamples = true
-		if cmd.Annotations["man-examples-section"] != "" {
-			values.Bugs = simpleToTroff(cmd.Annotations["man-examples-section"])
+		if altExampleSection != "" {
+			values.Examples = simpleToTroff(altExampleSection)
 		} else {
-			values.Bugs = simpleToTroff(cmd.Example)
+			values.Examples = simpleToTroff(cmd.Example)
 		}
 	}
 
@@ -337,21 +341,22 @@ func generateSynopsis(cmd *cobra.Command) string {
 	buf := new(bytes.Buffer)
 	if cmd.HasSubCommands() {
 		for _, c := range cmd.Commands() {
-			// if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
-			// 	continue
-			// }
-			buf.WriteString(fmt.Sprintf(".SY %s\n", c.CommandPath()))
-			buf.WriteString(fmt.Sprintf(".RI [ flags ]\n"))
-			buf.WriteString(fmt.Sprintf(".YS\n"))
+			if c.IsAdditionalHelpTopicCommand() {
+				continue
+			}
+			buf.WriteString(fmt.Sprintf("\\fB%s\\fR [ flags ]\n", c.CommandPath()))
+			buf.WriteString(".br\n")
 		}
 	} else {
-		buf.WriteString(fmt.Sprintf(".SY %s\n", cmd.CommandPath()))
+		buf.WriteString(fmt.Sprintf("\\fB%s\\fR ", cmd.CommandPath()))
 		flags := cmd.Flags()
-		if flags.HasFlags() {			
+		if flags.HasFlags() {
 			printSynFlags(buf, flags)
 		}
-		buf.WriteString(fmt.Sprintf(".Ar < args >\n"))
-		buf.WriteString(fmt.Sprintf(".YS\n"))
+		_, exists := cmd.Annotations["man-no-args"]
+		if !exists {
+			buf.WriteString("[<args>]")
+		}
 	}
 	return buf.String()
 }
@@ -362,9 +367,9 @@ func printSynFlags(buf *bytes.Buffer, flags *pflag.FlagSet) {
 			return
 		}
 		if len(flag.Shorthand) > 0 && len(flag.ShorthandDeprecated) == 0 {
-			buf.WriteString(fmt.Sprintf(".OP %s\n", flag.Shorthand))
+			buf.WriteString(fmt.Sprintf("[\\fI\\-%s\\fP|\\FI\\-\\-%s\\FP] ", flag.Shorthand, backslashify(flag.Name)))
 		} else {
-			buf.WriteString(fmt.Sprintf(".OP %s\n", backslashify(flag.Name)))
+			buf.WriteString(fmt.Sprintf("[\\fI\\-\\-%s\\fP] ", backslashify(flag.Name)))
 		}
 	})
 }
