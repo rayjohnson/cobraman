@@ -63,9 +63,9 @@ func TestGenerateManPageRequired(t *testing.T) {
 	assert.Regexp(t, ".TH \"FOO\" \"1\" \".*\" \"\" \"\"", buf.String())
 
 	buf.Reset()
-	opts = GenerateManOptions{LeftFooter: "kitty kat", CenterHeader: "Hello", CenterFooter: "meow", ProgramName: "Bobby", Section: "3"}
+	opts = GenerateManOptions{LeftFooter: "kitty kat", CenterHeader: "Hello", CenterFooter: "meow", Section: "3"}
 	assert.NoError(t, generateManPage(cmd, &opts, buf))
-	assert.Regexp(t, ".TH \"Bobby\" \"3\" \"meow\" \"kitty kat\" \"Hello\"", buf.String())
+	assert.Regexp(t, ".TH \"FOO\" \"3\" \"meow\" \"kitty kat\" \"Hello\"", buf.String())
 
 	buf.Reset()
 	date, _ := time.Parse(time.RFC3339, "1968-06-21T15:04:05Z")
@@ -82,7 +82,7 @@ func TestGenerateManPageRequired(t *testing.T) {
 	buf.Reset()
 	cmd = &cobra.Command{Use: "bar", Short: "going to"}
 	assert.NoError(t, generateManPage(cmd, &opts, buf))
-	assert.Regexp(t, ".SH NAME\nbar .. going to", buf.String())
+	assert.Regexp(t, ".SH NAME\nbar - going to", buf.String())
 
 	// Test Synopsis
 	assert.Regexp(t, ".SH SYNOPSIS\n.sp\n.+bar", buf.String())
