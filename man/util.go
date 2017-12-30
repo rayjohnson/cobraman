@@ -36,3 +36,7 @@ func backslashify(str string) string {
 	}
 	return backslashReplacer.Replace(str)
 }
+
+func dashify(str string) string {
+	return strings.Replace(str, " ", "-", -1)
+}
