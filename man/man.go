@@ -57,7 +57,8 @@ const defaultManTemplate = `.TH "{{.CommandPath | dashify | backslashify | upper
 {{ range .AllFlags -}}
 .TP
 {{ if .Shorthand }}\fB{{ print "-" .Shorthand | backslashify }}\fP, {{ end -}}
-\fB{{ print "--" .Name | backslashify }}\fP{{ if not .NoOptDefVal }} = {{ .DefValue }}{{end}}
+\fB{{ print "--" .Name | backslashify }}\fP{{ if not .NoOptDefVal }} =
+{{- if .ArgHint }} <{{ .ArgHint }}>{{ else }} {{ .DefValue }}{{ end }}{{ end }}
 {{ .Usage | backslashify }}
 {{ end }}
 {{- end -}}
@@ -123,7 +124,7 @@ type GenerateManOptions struct {
 
 	// Bugs if set with content will create a BUGS section for all
 	// pages.  If you want this section only for a single command add
-	// it as an annotation: cmd.Annotations["man-files-section"]
+	// it as an annotation: cmd.Annotations["man-bugs-section"]
 	// The field will be sanitized for troff output. However, if
 	// it starts with a '.' we assume it is valid troff and pass it through.
 	Bugs string
@@ -214,6 +215,7 @@ type Flag struct {
 	NoOptDefVal string
 	DefValue    string
 	Usage       string
+	ArgHint     string
 }
 
 type SeeAlso struct {
@@ -354,6 +356,10 @@ func genFlagArray(flags *pflag.FlagSet) []Flag {
 		}
 		if len(flag.ShorthandDeprecated) == 0 {
 			manFlag.Shorthand = flag.Shorthand
+		}
+		hintArr, exists := flag.Annotations["man-arg-hints"]
+		if exists && len(hintArr) > 0 {
+			manFlag.ArgHint = hintArr[0]
 		}
 		flagArray = append(flagArray, manFlag)
 	})

@@ -69,7 +69,7 @@ Here is the full set of options you may use:
 
 	// Bugs if set with content will create a BUGS section for all
 	// pages.  If you want this section only for a single command add
-	// it as an annotation: cmd.Annotations["man-files-section"]
+	// it as an annotation: cmd.Annotations["man-bugs-section"]
 	// The field will be sanitized for troff output. However, if
 	// it starts with a '.' we assume it is valid troff and pass it through.
 	Bugs string
@@ -91,12 +91,54 @@ Here is the full set of options you may use:
 	// sub commands in the man page file name.  The '-' char is the default.
 	CommandSeparator string
 
-	// GenSeprateInheiratedFlags will generate a separate section for
-	// inherited flags.  By default they will all be in the same OPZTIONS
-	// section.
-	GenSeprateInheritedFlags bool
-
 	// UseTemplate allows you to override the default go template used to
 	// generate the man pages with your own version.
 	UseTemplate string
 ```
+
+## Annotations
+
+This library uses the Annotations fields cobra.Cmd and pFlag to give some hints for the
+generation of the documentation.
+
+The following annotations on the cobra.Command object provides a way to provide content
+for additional sections in the man page.  The first three override the global Options in 
+case you want some of these sections only on some command man pages.
+* man-files-section
+* man-bugs-section
+* man-environment-section
+* man-examples-section
+* man-no-args
+
+The **man-examples-section** is a way to override the content of the cmd.Examples field.
+This is paticularly useful if you want to provide raw Troff code to make it look a bit 
+better.
+
+The **man-no-args** is a hint to tell the doc system that the command has no args.
+With the built-in template this is used to suppress the [\<args>] portion of the 
+command SYNOPSIS.
+
+Here is an example of how you can set the annotations on the command:
+```go
+	annotations := make(map[string]string)
+	annotations["man-files-section"] = "We use lots of files!"
+	annotations["man-no-args"] = "no args"
+	cmd.Annotations = annotations
+```
+
+In addition, there is an annotation you can put on individual flags:
+* man-arg-hints
+
+This provides a way to give a short description to the value expected by an flag.  This
+is used by the built-in template in the OPZTIONS section.  For example, setting the
+annotation like this:
+```go
+	annotation := []string{"path"}
+	flags.SetAnnotation("file", "man-arg-hints", annotation)
+```
+
+Will generate a option description like this:
+```
+-f, --file = <path>
+```
+
