@@ -108,21 +108,15 @@ case you want some of these sections only on some command man pages.
 * man-bugs-section
 * man-environment-section
 * man-examples-section
-* man-no-args
 
 The **man-examples-section** is a way to override the content of the cmd.Examples field.
 This is paticularly useful if you want to provide raw Troff code to make it look a bit 
 better.
 
-The **man-no-args** is a hint to tell the doc system that the command has no args.
-With the built-in template this is used to suppress the [\<args>] portion of the 
-command SYNOPSIS.
-
 Here is an example of how you can set the annotations on the command:
 ```go
 	annotations := make(map[string]string)
 	annotations["man-files-section"] = "We use lots of files!"
-	annotations["man-no-args"] = "no args"
 	cmd.Annotations = annotations
 ```
 

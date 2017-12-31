@@ -18,6 +18,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"text/template"
@@ -47,7 +49,7 @@ const defaultManTemplate = `.TH "{{.CommandPath | dashify | backslashify | upper
 {{- range .AllFlags -}}
 [{{ if .Shorthand }}\fI{{ print "-" .Shorthand | backslashify }}\fP|{{ end -}}
 \fI{{ print "--" .Name | backslashify }}\fP] {{ end }}
-{{- if not .NoArgs }} [<args>]{{ end }}
+{{- if not .NoArgs }}[<args>]{{ end }}
 {{- end }}
 .SH DESCRIPTION
 .PP
@@ -247,8 +249,9 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	values.UseLine = cmd.UseLine()
 	values.CommandPath = cmd.CommandPath()
 
-	_, exists := cmd.Annotations["man-no-args"]
-	values.NoArgs = exists
+	// Use reflection to see if cobra.NoArgs was set
+	argFuncName := runtime.FuncForPC(reflect.ValueOf(cmd.Args).Pointer()).Name()
+	values.NoArgs = strings.HasSuffix(argFuncName, "cobra.NoArgs")
 
 	if cmd.HasSubCommands() {
 		subCmdArr := make([]string, 0, 10)
