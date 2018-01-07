@@ -12,7 +12,22 @@ func (s byName) Len() int           { return len(s) }
 func (s byName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s byName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
+// TODO: this should be a repexp instead to handle \n\n\n case
 var sanatizeReplacer *strings.Replacer
+
+func simpleToMdoc(str string) string {
+	// Guessing this is already troff - so let it pass through
+	if len(str) > 1 && str[0] == '.' {
+		return str
+	}
+
+	// TODO: this could certainly be more sophisticated.  Pull requests welcome!
+	// Right now it is good enough for the most simple cases.
+	if sanatizeReplacer == nil {
+		sanatizeReplacer = strings.NewReplacer("\n\n", "\n.Pp\n")
+	}
+	return backslashify(sanatizeReplacer.Replace(str))
+}
 
 func simpleToTroff(str string) string {
 	// Guessing this is already troff - so let it pass through
