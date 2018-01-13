@@ -1,6 +1,7 @@
 package man
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,8 +13,7 @@ func (s byName) Len() int           { return len(s) }
 func (s byName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s byName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
-// TODO: this should be a repexp instead to handle \n\n\n case
-var sanatizeReplacer *strings.Replacer
+var multiNewlineRegex *regexp.Regexp
 
 func simpleToMdoc(str string) string {
 	// Guessing this is already troff - so let it pass through
@@ -23,10 +23,11 @@ func simpleToMdoc(str string) string {
 
 	// TODO: this could certainly be more sophisticated.  Pull requests welcome!
 	// Right now it is good enough for the most simple cases.
-	if sanatizeReplacer == nil {
-		sanatizeReplacer = strings.NewReplacer("\n\n", "\n.Pp\n")
+	if multiNewlineRegex == nil {
+		multiNewlineRegex = regexp.MustCompile(`\n+\n`)
 	}
-	return backslashify(sanatizeReplacer.Replace(str))
+
+	return backslashify(multiNewlineRegex.ReplaceAllString(str, "\n.Pp\n"))
 }
 
 func simpleToTroff(str string) string {
@@ -37,10 +38,11 @@ func simpleToTroff(str string) string {
 
 	// TODO: this could certainly be more sophisticated.  Pull requests welcome!
 	// Right now it is good enough for the most simple cases.
-	if sanatizeReplacer == nil {
-		sanatizeReplacer = strings.NewReplacer("\n\n", "\n.PP\n")
+	if multiNewlineRegex == nil {
+		multiNewlineRegex = regexp.MustCompile(`\n+\n`)
 	}
-	return backslashify(sanatizeReplacer.Replace(str))
+
+	return backslashify(multiNewlineRegex.ReplaceAllString(str, "\n.PP\n"))
 }
 
 var backslashReplacer *strings.Replacer

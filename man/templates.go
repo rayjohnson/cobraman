@@ -1,6 +1,7 @@
 package man
 
-const defaultManTemplate = `.TH "{{.CommandPath | dashify | backslashify | upper}}" "{{ .Section }}" "{{.CenterFooter}}" "{{.LeftFooter}}" "{{.CenterHeader}}" 
+// TroffManTemplate generates a man page with only basic troff macros
+const TroffManTemplate = `.TH "{{.CommandPath | dashify | backslashify | upper}}" "{{ .Section }}" "{{.CenterFooter}}" "{{.LeftFooter}}" "{{.CenterHeader}}" 
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)

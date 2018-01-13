@@ -41,13 +41,28 @@ func TestSimpleToTroff(t *testing.T) {
 		{"Some test\none a line", "Some test\none a line"},
 		{"Some test\n\nwith empty line", "Some test\n.PP\nwith empty line"},
 		{".ignore me\n\none a line", ".ignore me\n\none a line"},
-		// TODO: these two tests do not work
-		// {"Some test\n\n\nwith empty line", "Some test\n.PP\nwith empty line"},
-		// {"Some test\n\n\n\nwith empty line", "Some test\n.PP\n.PP\nwith empty line"},
+		{"Some test\n\n\nwith empty line", "Some test\n.PP\nwith empty line"},
+		{"Some test\n\n\n\nwith empty line", "Some test\n.PP\nwith empty line"},
 	}
 
 	for i := 0; i < len(cases); i++ {
 		str := simpleToTroff(cases[i][0])
+		expected := cases[i][1]
+		assert.Equal(t, expected, str)
+	}
+}
+
+func TestSimpleToMdoc(t *testing.T) {
+	cases := [][]string{
+		{"Some test\none a line", "Some test\none a line"},
+		{"Some test\n\nwith empty line", "Some test\n.Pp\nwith empty line"},
+		{".ignore me\n\none a line", ".ignore me\n\none a line"},
+		{"Some test\n\n\nwith empty line", "Some test\n.Pp\nwith empty line"},
+		{"Some test\n\n\n\nwith empty line", "Some test\n.Pp\nwith empty line"},
+	}
+
+	for i := 0; i < len(cases); i++ {
+		str := simpleToMdoc(cases[i][0])
 		expected := cases[i][1]
 		assert.Equal(t, expected, str)
 	}

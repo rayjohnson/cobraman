@@ -256,7 +256,7 @@ func generateManPage(cmd *cobra.Command, opts *GenerateManOptions, w io.Writer) 
 	values.SeeAlsos = generateSeeAlsos(cmd, values.Section)
 
 	// Build the template and generate the man page
-	manTemplateStr := defaultManTemplate
+	manTemplateStr := TroffManTemplate
 	if opts.UseTemplate != "" {
 		manTemplateStr = opts.UseTemplate
 	}
