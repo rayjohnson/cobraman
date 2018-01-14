@@ -36,6 +36,20 @@ func TestDashify(t *testing.T) {
 	}
 }
 
+func TestUnderscoreify(t *testing.T) {
+	cases := [][]string{
+		{`foo bar`, `foo_bar`},
+		{`foo bar cat`, `foo_bar_cat`},
+		{` foo bar `, `_foo_bar_`},
+	}
+
+	for i := 0; i < len(cases); i++ {
+		str := underscoreify(cases[i][0])
+		expected := cases[i][1]
+		assert.Equal(t, expected, str)
+	}
+}
+
 func TestSimpleToTroff(t *testing.T) {
 	cases := [][]string{
 		{"Some test\none a line", "Some test\none a line"},

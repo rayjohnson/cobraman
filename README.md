@@ -22,7 +22,7 @@ func main() {
 		Use:   "dofoo",
 		Short: "my dofoo program",
 	}
-	manOpts := &man.GenerateManOptions{
+	manOpts := &man.CobraManOptions{
 		LeftFooter:  "Dofoo " + version,
 		Author:      "Foo Bar <foo@bar.com>",
 		Directory:   "/tmp",
@@ -88,12 +88,16 @@ Here is the full set of options you may use:
 	// Directory location for where to generate the man pages
 	Directory string
 
-	// CommandSperator defines what character to use to separate the
+	// FileCmdSeparator defines what character to use to separate the
 	// sub commands in the man page file name.  The '-' char is the default.
-	CommandSeparator string
+	FileCmdSeparator string
 
-	// UseTemplate allows you to override the default go template used to
-	// generate the man pages with your own version.
+	// FileSuffix is the file extension to use for file name.  Defaults to the section
+	// for man templates and .md for the MarkdownTemplate template.
+	FileSuffix string
+
+	// UseTemplate allows you to set the template used to generate
+	// documentation.  The default is defined in man.TroffManTemplate
 	UseTemplate string
 ```
 
@@ -145,6 +149,7 @@ are defined that can be used out of the box.  They include:
 
 * man.TroffManTemplate - which generates a man page with basic troff macros
 * man.MdocManTemplate - which generates a man page using the mdoc macro package
+* man.MarkdownTemplate - which generates a page using Markdown
 
 But, of course, you can provide your own template if you like for maximum power!
 
