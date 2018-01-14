@@ -143,14 +143,14 @@ Will generate a option description like this:
 
 ## Templates
 
-Cobra Man uses Go templates to generate the documentation it generates.  You can replace the
-template used by setting the **UseTemplate** variable in man options.  A couple of templates
-are defined that can be used out of the box.  They include:
+Cobra Man uses Go templates to generate the documentation.  You can replace the template used by setting the **UseTemplate** variable in CobraManOptions.  A couple of templates are defined that can be used out of the box.  They include:
 
 * man.TroffManTemplate - which generates a man page with basic troff macros
 * man.MdocManTemplate - which generates a man page using the mdoc macro package
 * man.MarkdownTemplate - which generates a page using Markdown
 
 But, of course, you can provide your own template if you like for maximum power!
+
+See [Writing your own template](WRITING_A_TEMPLATE.md) for more information.
 
 
