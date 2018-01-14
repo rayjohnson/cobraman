@@ -4,6 +4,21 @@ Cobra-man uses Go's template system to generate documents.  If you are new to th
 first check out the core go documentation about templates:
 https://golang.org/pkg/text/template/
 
+## Register a template
+
+If you provide your own template you need to register it before calling CobraMan.
+The **RegisterTemplate** function allows you to register the template string and
+you also set some hints on how to generate the file names.
+
+Here is an example call:
+```
+	RegisterTemplate("markdown", "_", "md", MarkdownTemplate)
+```
+
+The first argument is the name of the template.  You will pass that into cobraManOptions.TemplateName.  The second is a separator to use when generating a file name.  it used between the base name and the name of sub-commands.  The third argument is the extension to give the file name.  Finally, the last argument is a string that defines yiour template.
+
+*Note: the extension argument can also take the special string "use_section" and the extension used will be the value set in cobraManOptions.Section.*
+
 ## Variables
 
 The following variables are available for generating documentation.
@@ -36,12 +51,15 @@ The following variables are available for generating documentation.
 * .Usage - The usage string set on the pflag.Flag
 * .NoOptDefVal - (TODO - how best to describe)
 * .DefValue - The default value set on the pflag
-* .ArgHint the value of an annotation on the pflag named "arg-hint". (TODO: check)
+* .ArgHint - The value of an annotation on the pflag named "man-arg-hints"
 
 #### SeeAlso struct (used in the SeeAlsos array)
 
 * .CmdPath - the space separated path of a related path
 * .Section - the man Section which will usually be the same as .Section above
+* .IsParent - a boolean denoting this entry is the parent
+* .IsChild - a boolean denoting this entry is a child sub-command
+* .IsSibling - a boolean denoting this entry is a sibling sub-command
 
 ## Functions
 

@@ -1,9 +1,10 @@
-# Generating Man Pages For Your cobra.Command
+# Generating Documentation For Your cobra.Command
 ![Image of Cobra Man](https://raw.githubusercontent.com/rayjohnson/cobra-man/master/cobra-man.jpeg)
 
-This is a replacement for the man generator used by spf13/cobra.  The one in spf13/cobra/doc first
-generates markdown and then calls another package to convert mark-down to roff.  This one generates
-the roff directly and a little more cleanly.  It also has a few more options.
+This is a replacement for the man generator used by spf13/cobra.  The code in spf13/cobra/doc has different generators that hard-code what gets output for man pages, markdown, etc.  It
+also calls a lot of other 3rd party libraries.  This package uses the Go template facility
+to generate documentation.  It is much more powerful and flexible thus giving a lot more
+control over the format and style of documentation you would like to generate.
 
 Here is a simple example to get you started:
 
@@ -37,69 +38,7 @@ func main() {
 
 That will get you a man page `/tmp/dofoo.1`
 
-Here is the full set of options you may use:
-```
-	// ProgramName is used in the man page header across all pages
-	// The default is to generate an all CAPS path like CMD-SUBCMD
-	// for each page.  Because this would instead make them the same
-	// for all pages it is probably best not to override.
-	ProgramName string
-
-	// What section to generate the pages 4 (1 is the default if not set)
-	Section string
-
-	// CenterFooter used across all pages (defaults to current month and year)
-	// If you just want to set the date used in the center footer use Date
-	CenterFooter string
-
-	// If you just want to set the date used in the center footer use Date
-	Date *time.Time
-
-	// LeftFooter used across all pages
-	LeftFooter string
-
-	// CenterHeader used across all pages
-	CenterHeader string
-
-	// Files if set with content will create a FILES section for all
-	// pages.  If you want this section only for a single command add
-	// it as an annotation: cmd.Annotations["man-files-section"]
-	// The field will be sanitized for troff output. However, if
-	// it starts with a '.' we assume it is valid troff and pass it through.
-	Files string
-
-	// Bugs if set with content will create a BUGS section for all
-	// pages.  If you want this section only for a single command add
-	// it as an annotation: cmd.Annotations["man-bugs-section"]
-	// The field will be sanitized for troff output. However, if
-	// it starts with a '.' we assume it is valid troff and pass it through.
-	Bugs string
-
-	// Environment if set with content will create a ENVIRONMENT section for all
-	// pages.  If you want this section only for a single command add
-	// it as an annotation: cmd.Annotations["man-environment-section"]
-	// The field will be sanitized for troff output. However, if
-	// it starts with a '.' we assume it is valid troff and pass it through.
-	Environment string
-
-	// Author if set will create a Author section with this content.
-	Author string
-
-	// Directory location for where to generate the man pages
-	Directory string
-
-	// FileCmdSeparator defines what character to use to separate the
-	// sub commands in the man page file name.  The '-' char is the default.
-	FileCmdSeparator string
-
-	// FileSuffix is the file extension to use for file name.  Defaults to the section
-	// for man templates and .md for the MarkdownTemplate template.
-	FileSuffix string
-
-	// UseTemplate allows you to set the template used to generate
-	// documentation.  The default is defined in man.TroffManTemplate
-	UseTemplate string
-```
+GoDoc has the full API documentation [here](https://godoc.org/github.com/rayjohnson/cobra-man/man).  Be sure to checkout the documentation for CobraManOptions as it provides many options to control the output.
 
 ## Annotations
 
@@ -143,11 +82,11 @@ Will generate a option description like this:
 
 ## Templates
 
-Cobra Man uses Go templates to generate the documentation.  You can replace the template used by setting the **UseTemplate** variable in CobraManOptions.  A couple of templates are defined that can be used out of the box.  They include:
+Cobra Man uses Go templates to generate the documentation.  You can replace the template used by setting the **TemplateName** variable in CobraManOptions.  A couple of templates are defined that can be used out of the box.  They include:
 
-* man.TroffManTemplate - which generates a man page with basic troff macros
-* man.MdocManTemplate - which generates a man page using the mdoc macro package
-* man.MarkdownTemplate - which generates a page using Markdown
+* "troff" - which generates a man page with basic troff macros
+* "mdoc" - which generates a man page using the mdoc macro package
+* "markdown" - which generates a page using Markdown
 
 But, of course, you can provide your own template if you like for maximum power!
 

@@ -1,7 +1,54 @@
 package man
 
+import (
+	"strings"
+	"text/template"
+)
+
+type manTemplate struct {
+	separator string
+	extension string
+	template  *template.Template
+}
+
+var templateMap = make(map[string]manTemplate)
+
+// RegisterTemplate takes a template string creates a template for use with CobraMan.  It
+// also takes a separator and file extension to be used when generating the file names for
+// the generated files.
+func RegisterTemplate(name string, separator string, extension string, templateString string) {
+	// Build the template
+	funcMap := template.FuncMap{
+		"upper":         strings.ToUpper,
+		"backslashify":  backslashify,
+		"dashify":       dashify,
+		"underscoreify": underscoreify,
+		"simpleToTroff": simpleToTroff,
+		"simpleToMdoc":  simpleToMdoc,
+	}
+	parsedTemplate := template.Must(template.New(name).Funcs(funcMap).Parse(templateString))
+
+	t := manTemplate{
+		separator: separator,
+		extension: extension,
+		template:  parsedTemplate,
+	}
+	templateMap[name] = t
+}
+
+func getTemplate(name string) (string, string, *template.Template) {
+	t := templateMap[name]
+	return t.separator, t.extension, t.template
+}
+
+func init() {
+	RegisterTemplate("troff", "-", "use_section", troffManTemplate)
+	RegisterTemplate("mdoc", "-", "use_section", MdocManTemplate)
+	RegisterTemplate("markdown", "_", "md", MarkdownTemplate)
+}
+
 // TroffManTemplate generates a man page with only basic troff macros
-const TroffManTemplate = `.TH "{{.CommandPath | dashify | backslashify | upper}}" "{{ .Section }}" "{{.CenterFooter}}" "{{.LeftFooter}}" "{{.CenterHeader}}" 
+const troffManTemplate = `.TH "{{.CommandPath | dashify | backslashify | upper}}" "{{ .Section }}" "{{.CenterFooter}}" "{{.LeftFooter}}" "{{.CenterHeader}}" 
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)

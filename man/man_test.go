@@ -45,10 +45,10 @@ func TestGenerateManPages(t *testing.T) {
 	cmd = &cobra.Command{Use: "foo"}
 	cmd2 = &cobra.Command{Use: "bar", Run: func(cmd *cobra.Command, args []string) {}}
 	cmd.AddCommand(cmd2)
-	opts = CobraManOptions{FileCmdSeparator: "_"}
+	opts = CobraManOptions{TemplateName: "markdown"}
 	assert.Nil(t, GenerateManPages(cmd, &opts))
-	checkForFile(t, "foo.1")
-	checkForFile(t, "foo_bar.1")
+	checkForFile(t, "foo.md")
+	checkForFile(t, "foo_bar.md")
 
 }
 
@@ -57,9 +57,9 @@ func TestSetCobraManOptDefaults(t *testing.T) {
 
 	setCobraManOptDefaults(&opts)
 	assert.Equal(t, opts.Section, "1")
-	assert.Equal(t, opts.FileCmdSeparator, "-")
-	assert.Equal(t, opts.UseTemplate, TroffManTemplate)
-	assert.Equal(t, opts.FileSuffix, "1")
+	assert.Equal(t, opts.fileCmdSeparator, "-")
+	assert.Equal(t, opts.TemplateName, "troff")
+	assert.Equal(t, opts.fileSuffix, "1")
 
 	delta := time.Now().Sub(*opts.Date)
 	if delta.Seconds() >= 1 {
@@ -67,14 +67,18 @@ func TestSetCobraManOptDefaults(t *testing.T) {
 	}
 
 	opts = CobraManOptions{}
-	opts.UseTemplate = MarkdownTemplate
+	opts.TemplateName = "markdown"
 
 	setCobraManOptDefaults(&opts)
 	assert.Equal(t, opts.Section, "1")
-	assert.Equal(t, opts.UseTemplate, MarkdownTemplate)
-	assert.Equal(t, opts.FileCmdSeparator, "_")
-	assert.Equal(t, opts.FileSuffix, "md")
+	assert.Equal(t, opts.TemplateName, "markdown")
+	assert.Equal(t, opts.fileCmdSeparator, "_")
+	assert.Equal(t, opts.fileSuffix, "md")
 
+	opts = CobraManOptions{}
+	opts.TemplateName = "no exist"
+
+	assert.Panics(t, func() { setCobraManOptDefaults(&opts) }, "should have paniced")
 }
 
 func TestGenerateManPageRequired(t *testing.T) {
@@ -244,19 +248,4 @@ func TestGenerateManPageAltSections(t *testing.T) {
 	buf.Reset()
 	assert.NoError(t, GenerateOnePage(cmd, &opts, buf))
 	assert.Regexp(t, ".SH AUTHOR\nWritten by Ray Johnson\n.PP\n.SM Page auto-generated", buf.String()) // No OPTIONS section if not in opts
-}
-
-func TestGenerateManPageTemplate(t *testing.T) {
-	buf := new(bytes.Buffer)
-
-	// bad user template
-	cmd := &cobra.Command{Use: "foo"}
-	opts := CobraManOptions{UseTemplate: "what {{ "}
-	assert.Error(t, GenerateOnePage(cmd, &opts, buf))
-
-	buf.Reset()
-	opts = CobraManOptions{UseTemplate: "Hello {{ \"world\" }} "}
-	assert.NoError(t, GenerateOnePage(cmd, &opts, buf))
-	assert.Regexp(t, "Hello world", buf.String()) // No OPTIONS section if not in opts
-
 }

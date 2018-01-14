@@ -22,7 +22,6 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -76,17 +75,20 @@ type CobraManOptions struct {
 	// Directory location for where to generate the man pages
 	Directory string
 
-	// FileCmdSeparator defines what character to use to separate the
+	// TemplateName allows you to set the template used to generate
+	// documentation.  Templates need to be registered via RegisterTemplate.
+	// The default template is "troff"
+	TemplateName string
+
+	// Private fields
+
+	// fileCmdSeparator defines what character to use to separate the
 	// sub commands in the man page file name.  The '-' char is the default.
-	FileCmdSeparator string
+	fileCmdSeparator string
 
-	// FileSuffix is the file extension to use for file name.  Defaults to the section
+	// fileSuffix is the file extension to use for file name.  Defaults to the section
 	// for man templates and .md for the MarkdownTemplate template.
-	FileSuffix string
-
-	// UseTemplate allows you to set the template used to generate
-	// documentation.  The default is defined in man.TroffManTemplate
-	UseTemplate string
+	fileSuffix string
 }
 
 // GenerateManPages - build man pages for the passed in cobra.Command
@@ -105,11 +107,11 @@ func GenerateManPages(cmd *cobra.Command, opts *CobraManOptions) error {
 	setCobraManOptDefaults(opts)
 
 	// Generate file name and open the file
-	basename := strings.Replace(cmd.CommandPath(), " ", opts.FileCmdSeparator, -1)
+	basename := strings.Replace(cmd.CommandPath(), " ", opts.fileCmdSeparator, -1)
 	if basename == "" {
 		return fmt.Errorf("you need a command name to have a man page")
 	}
-	filename := filepath.Join(opts.Directory, basename+"."+opts.FileSuffix)
+	filename := filepath.Join(opts.Directory, basename+"."+opts.fileSuffix)
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -128,22 +130,18 @@ func setCobraManOptDefaults(opts *CobraManOptions) {
 		now := time.Now()
 		opts.Date = &now
 	}
-	if opts.FileCmdSeparator == "" {
-		if opts.UseTemplate == MarkdownTemplate {
-			opts.FileCmdSeparator = "_"
-		} else {
-			opts.FileCmdSeparator = "-"
-		}
+
+	if opts.TemplateName == "" {
+		opts.TemplateName = "troff"
 	}
-	if opts.UseTemplate == "" {
-		opts.UseTemplate = TroffManTemplate
+	sep, ext, t := getTemplate(opts.TemplateName)
+	if t == nil {
+		panic("template could not be found: " + opts.TemplateName)
 	}
-	if opts.FileSuffix == "" {
-		if opts.UseTemplate == MarkdownTemplate {
-			opts.FileSuffix = "md"
-		} else {
-			opts.FileSuffix = opts.Section
-		}
+	opts.fileCmdSeparator = sep
+	opts.fileSuffix = ext
+	if ext == "use_section" {
+		opts.fileSuffix = opts.Section
 	}
 }
 
@@ -159,10 +157,10 @@ type manStruct struct {
 	Description      string
 	NoArgs           bool
 
-	AllFlags          []Flag
-	InheritedFlags    []Flag
-	NonInheritedFlags []Flag
-	SeeAlsos          []SeeAlso
+	AllFlags          []manFlag
+	InheritedFlags    []manFlag
+	NonInheritedFlags []manFlag
+	SeeAlsos          []seeAlso
 	SubCommands       []string
 
 	Author      string
@@ -172,7 +170,7 @@ type manStruct struct {
 	Examples    string
 }
 
-type Flag struct {
+type manFlag struct {
 	Shorthand   string
 	Name        string
 	NoOptDefVal string
@@ -181,9 +179,12 @@ type Flag struct {
 	ArgHint     string
 }
 
-type SeeAlso struct {
-	CmdPath string
-	Section string
+type seeAlso struct {
+	CmdPath   string
+	Section   string
+	IsParent  bool
+	IsChild   bool
+	IsSibling bool
 }
 
 // GenerateOnePage will generate one documentation page and output the result to w
@@ -282,69 +283,59 @@ func GenerateOnePage(cmd *cobra.Command, opts *CobraManOptions, w io.Writer) err
 	// SEE ALSO section
 	values.SeeAlsos = generateSeeAlsos(cmd, values.Section)
 
-	// Build the template and generate the man page
-	funcMap := template.FuncMap{
-		"upper":         strings.ToUpper,
-		"backslashify":  backslashify,
-		"dashify":       dashify,
-		"underscoreify": underscoreify,
-		"simpleToTroff": simpleToTroff,
-		"simpleToMdoc":  simpleToMdoc,
-	}
-	parsedTemplate, err := template.New("man").Funcs(funcMap).Parse(opts.UseTemplate)
-	if err != nil {
-		return err
-	}
-	err = parsedTemplate.Execute(w, values)
+	// Get template and generate the documentation page
+	_, _, t := getTemplate(opts.TemplateName)
+	err := t.Execute(w, values)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func genFlagArray(flags *pflag.FlagSet) []Flag {
-	flagArray := make([]Flag, 0, 15)
+func genFlagArray(flags *pflag.FlagSet) []manFlag {
+	flagArray := make([]manFlag, 0, 15)
 	flags.VisitAll(func(flag *pflag.Flag) {
 		if len(flag.Deprecated) > 0 || flag.Hidden {
 			return
 		}
-		manFlag := Flag{
+		thisFlag := manFlag{
 			Name:        flag.Name,
 			NoOptDefVal: flag.NoOptDefVal,
 			DefValue:    flag.DefValue,
 			Usage:       flag.Usage,
 		}
 		if len(flag.ShorthandDeprecated) == 0 {
-			manFlag.Shorthand = flag.Shorthand
+			thisFlag.Shorthand = flag.Shorthand
 		}
 		hintArr, exists := flag.Annotations["man-arg-hints"]
 		if exists && len(hintArr) > 0 {
-			manFlag.ArgHint = hintArr[0]
+			thisFlag.ArgHint = hintArr[0]
 		}
-		flagArray = append(flagArray, manFlag)
+		flagArray = append(flagArray, thisFlag)
 	})
 
 	return flagArray
 }
 
-func generateSeeAlsos(cmd *cobra.Command, section string) []SeeAlso {
-	seealsos := make([]SeeAlso, 0)
+func generateSeeAlsos(cmd *cobra.Command, section string) []seeAlso {
+	seealsos := make([]seeAlso, 0)
 	if cmd.HasParent() {
-		see := SeeAlso{
-			CmdPath: cmd.Parent().CommandPath(),
-			Section: section,
+		see := seeAlso{
+			CmdPath:  cmd.Parent().CommandPath(),
+			Section:  section,
+			IsParent: true,
 		}
 		seealsos = append(seealsos, see)
-		// TODO: may want to control if siblings are shown or not
 		siblings := cmd.Parent().Commands()
 		sort.Sort(byName(siblings))
 		for _, c := range siblings {
 			if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() || c.Name() == cmd.Name() {
 				continue
 			}
-			see := SeeAlso{
-				CmdPath: c.CommandPath(),
-				Section: section,
+			see := seeAlso{
+				CmdPath:   c.CommandPath(),
+				Section:   section,
+				IsSibling: true,
 			}
 			seealsos = append(seealsos, see)
 		}
@@ -355,9 +346,10 @@ func generateSeeAlsos(cmd *cobra.Command, section string) []SeeAlso {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 			continue
 		}
-		see := SeeAlso{
+		see := seeAlso{
 			CmdPath: c.CommandPath(),
 			Section: section,
+			IsChild: true,
 		}
 		seealsos = append(seealsos, see)
 	}
