@@ -13,7 +13,7 @@
 
 // Package man is a library for generating documentation out of a command
 // line structure created by the github.com/spf13/cobra library.
-package man
+package cobraman
 
 import (
 	"fmt"

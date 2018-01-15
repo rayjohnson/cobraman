@@ -1,5 +1,5 @@
 # Generating Documentation For Your cobra.Command
-![Image of Cobra Man](https://raw.githubusercontent.com/rayjohnson/cobra-man/master/cobra-man.jpeg)
+![Image of Cobra Man](https://raw.githubusercontent.com/rayjohnson/cobraman/master/cobra-man.jpeg)
 
 This is a replacement for the man generator used by spf13/cobra.  The code in spf13/cobra/doc has different generators that hard-code what gets output for man pages, markdown, etc.  It
 also calls a lot of other 3rd party libraries.  This package uses the Go template facility
@@ -15,7 +15,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"github.com/rjohnson/cobra-man/man"
+	"github.com/rjohnson/cobraman"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 		LeftFooter:  "Dofoo " + version,
 		Author:      "Foo Bar <foo@bar.com>",
 		Directory:   "/tmp",
-		Bugs:        `Bugs related to cobra-man can be filed at https://github.com/rjohnson/cobra-man`,
+		Bugs:        `Bugs related to cobra-man can be filed at https://github.com/rjohnson/cobraman`,
 	}
 	err := man.GenerateManPages(cmd.Root(), manOpts)
 	if err != nil {
@@ -38,7 +38,7 @@ func main() {
 
 That will get you a man page `/tmp/dofoo.1`
 
-GoDoc has the full API documentation [here](https://godoc.org/github.com/rayjohnson/cobra-man/man).  Be sure to checkout the documentation for CobraManOptions as it provides many options to control the output.
+GoDoc has the full API documentation [here](https://godoc.org/github.com/rayjohnson/cobraman).  Be sure to checkout the documentation for CobraManOptions as it provides many options to control the output.
 
 ## Annotations
 
