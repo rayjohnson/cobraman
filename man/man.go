@@ -30,7 +30,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// GenerateManOptions is used configure how GenerateManPages will
+// CobraManOptions is used configure how GenerateManPages will
 // do its job.
 type CobraManOptions struct {
 	// What section to generate the pages 4 (1 is the default if not set)
