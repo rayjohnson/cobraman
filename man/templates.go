@@ -53,6 +53,3 @@ func getTemplate(name string) (string, string, *template.Template) {
 	t := templateMap[name]
 	return t.separator, t.extension, t.template
 }
-
-
-
