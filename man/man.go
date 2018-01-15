@@ -74,14 +74,6 @@ type CobraManOptions struct {
 	// Author if set will create a Author section with this content.
 	Author string
 
-	// Directory location for where to generate the man pages
-	Directory string
-
-	// TemplateName allows you to set the template used to generate
-	// documentation.  Templates need to be registered via RegisterTemplate.
-	// The default template is "troff"
-	TemplateName string
-
 	// Private fields
 
 	// fileCmdSeparator defines what character to use to separate the
@@ -93,27 +85,30 @@ type CobraManOptions struct {
 	fileSuffix string
 }
 
-// GenerateManPages - build man pages for the passed in cobra.Command
-// and all of its children
-func GenerateManPages(cmd *cobra.Command, opts *CobraManOptions) error {
+// GenerateDocs - build man pages for the passed in cobra.Command
+// and all of its children.
+func GenerateDocs(cmd *cobra.Command, opts *CobraManOptions, directory string, templateName string) error {
+	// Set defaults
+	validate(opts, templateName)
+	if directory == "" {
+		directory = "."
+	}
+
 	for _, c := range cmd.Commands() {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 			continue
 		}
-		if err := GenerateManPages(c, opts); err != nil {
+		if err := GenerateDocs(c, opts, directory, templateName); err != nil {
 			return err
 		}
 	}
-
-	// Set defaults
-	setCobraManOptDefaults(opts)
 
 	// Generate file name and open the file
 	basename := strings.Replace(cmd.CommandPath(), " ", opts.fileCmdSeparator, -1)
 	if basename == "" {
 		return fmt.Errorf("you need a command name to have a man page")
 	}
-	filename := filepath.Join(opts.Directory, basename+"."+opts.fileSuffix)
+	filename := filepath.Join(directory, basename+"."+opts.fileSuffix)
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -121,10 +116,10 @@ func GenerateManPages(cmd *cobra.Command, opts *CobraManOptions) error {
 	defer f.Close()
 
 	// Generate the documentation
-	return GenerateOnePage(cmd, opts, f)
+	return GenerateOnePage(cmd, opts, templateName, f)
 }
 
-func setCobraManOptDefaults(opts *CobraManOptions) {
+func validate(opts *CobraManOptions, templateName string) {
 	if opts.Section == "" {
 		opts.Section = "1"
 	}
@@ -133,12 +128,9 @@ func setCobraManOptDefaults(opts *CobraManOptions) {
 		opts.Date = &now
 	}
 
-	if opts.TemplateName == "" {
-		opts.TemplateName = "troff"
-	}
-	sep, ext, t := getTemplate(opts.TemplateName)
+	sep, ext, t := getTemplate(templateName)
 	if t == nil {
-		panic("template could not be found: " + opts.TemplateName)
+		panic("template could not be found: " + templateName)
 	}
 	opts.fileCmdSeparator = sep
 	opts.fileSuffix = ext
@@ -191,9 +183,9 @@ type seeAlso struct {
 
 // GenerateOnePage will generate one documentation page and output the result to w
 // TODO: document use of this function in README
-func GenerateOnePage(cmd *cobra.Command, opts *CobraManOptions, w io.Writer) error {
+func GenerateOnePage(cmd *cobra.Command, opts *CobraManOptions, templateName string, w io.Writer) error {
 	// Set defaults - these would already be set unless GenerateOnePage called directly
-	setCobraManOptDefaults(opts)
+	validate(opts, templateName)
 
 	values := manStruct{}
 
@@ -286,7 +278,7 @@ func GenerateOnePage(cmd *cobra.Command, opts *CobraManOptions, w io.Writer) err
 	values.SeeAlsos = generateSeeAlsos(cmd, values.Section)
 
 	// Get template and generate the documentation page
-	_, _, t := getTemplate(opts.TemplateName)
+	_, _, t := getTemplate(templateName)
 	err := t.Execute(w, values)
 	if err != nil {
 		return err

@@ -64,7 +64,7 @@ func (dg *DocGenTool) AddBashCompletionGenerator(fileName string) *DocGenTool {
 }
 
 // AddDocGenerator will create a subcommand for the utility tool that will
-// generate documentation with the passed in CobraManoptions and templateName.
+// generate documentation with the passed in CobraManOptions and templateName.
 // It supports a --directory flag for where to place the generated files.  The
 // subcommand will be named generate-<templateName> where templateName is the
 // same as the template used to generate the documentation.
@@ -80,9 +80,7 @@ func (dg *DocGenTool) AddDocGenerator(opts *CobraManOptions, templateName string
 		Args:  cobra.NoArgs,
 		Short: "Generate docs with the " + templateName + " template",
 		RunE: func(myCmd *cobra.Command, args []string) error {
-			opts.Directory = dg.installDirectory
-			opts.TemplateName = templateName
-			return GenerateManPages(dg.appCmd, opts)
+			return GenerateDocs(dg.appCmd, opts, dg.installDirectory, templateName)
 		},
 	}
 

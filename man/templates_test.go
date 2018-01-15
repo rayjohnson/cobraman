@@ -31,8 +31,8 @@ func TestCustomerTemplate(t *testing.T) {
 
 	RegisterTemplate("good", "-", "txt", "Hello {{ \"world\" }} ")
 	cmd := &cobra.Command{Use: "foo"}
-	opts := CobraManOptions{TemplateName: "good"}
-	assert.NoError(t, GenerateOnePage(cmd, &opts, buf))
+	opts := CobraManOptions{}
+	assert.NoError(t, GenerateOnePage(cmd, &opts, "good", buf))
 	assert.Regexp(t, "Hello world", buf.String()) // No OPTIONS section if not in opts
 
 }
