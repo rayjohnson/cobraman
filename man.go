@@ -211,7 +211,7 @@ func GenerateOnePage(cmd *cobra.Command, opts *CobraManOptions, templateName str
 	if cmd.HasSubCommands() {
 		subCmdArr := make([]string, 0, 10)
 		for _, c := range cmd.Commands() {
-			if c.IsAdditionalHelpTopicCommand() {
+			if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 				continue
 			}
 			subCmdArr = append(subCmdArr, c.CommandPath())
