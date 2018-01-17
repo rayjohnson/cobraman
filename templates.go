@@ -26,20 +26,37 @@ type manTemplate struct {
 
 var templateMap = make(map[string]manTemplate)
 
+var templateFuncs = template.FuncMap{
+	"upper":          strings.ToUpper,
+	"backslashify":   backslashify,
+	"dashify":        dashify,
+	"underscoreify":  underscoreify,
+	"simpleToTroff":  simpleToTroff,
+	"simpleToMdoc":   simpleToMdoc,
+	"makeline":       makeline,
+	"trim":           strings.TrimSpace,
+	"trimRightSpace": trimRightSpace,
+	"rpad":           rpad,
+}
+
+// AddTemplateFunc adds a template function that's available to doc templates
+func AddTemplateFunc(name string, tmplFunc interface{}) {
+	templateFuncs[name] = tmplFunc
+}
+
+// AddTemplateFuncs adds multiple template functions that are available to doc templates
+func AddTemplateFuncs(tmplFuncs template.FuncMap) {
+	for k, v := range tmplFuncs {
+		templateFuncs[k] = v
+	}
+}
+
 // RegisterTemplate takes a template string creates a template for use with CobraMan.  It
 // also takes a separator and file extension to be used when generating the file names for
 // the generated files.
 func RegisterTemplate(name string, separator string, extension string, templateString string) {
 	// Build the template
-	funcMap := template.FuncMap{
-		"upper":         strings.ToUpper,
-		"backslashify":  backslashify,
-		"dashify":       dashify,
-		"underscoreify": underscoreify,
-		"simpleToTroff": simpleToTroff,
-		"simpleToMdoc":  simpleToMdoc,
-	}
-	parsedTemplate := template.Must(template.New(name).Funcs(funcMap).Parse(templateString))
+	parsedTemplate := template.Must(template.New(name).Funcs(templateFuncs).Parse(templateString))
 
 	t := manTemplate{
 		separator: separator,
