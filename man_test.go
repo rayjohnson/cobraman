@@ -33,7 +33,7 @@ func checkForFile(t *testing.T, path string) {
 
 func checkFileNotExist(t *testing.T, path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-	  return
+		return
 	}
 	assert.Fail(t, "File exists but should not: "+path)
 }
