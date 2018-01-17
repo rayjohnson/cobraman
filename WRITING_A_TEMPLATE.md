@@ -73,6 +73,8 @@ to meet your needs.
 	-, _, \&, \\, ~
 * simpleToTroff - Inserts .PP where one or more blank newlines appear
 * simpleToMdoc - Inserts .Pp where one or more blank newlines appear
+* trimRightSpace - Clears any whitespace from the end of the passed in string
+* rpad - Returns passed in string adding spaces to ensure it as least padding length long
 
 ## Example
 
