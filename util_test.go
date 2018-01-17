@@ -15,6 +15,7 @@ package cobraman
 
 import (
 	"github.com/stretchr/testify/assert"
+	"strconv"
 	"testing"
 )
 
@@ -91,6 +92,47 @@ func TestSimpleToMdoc(t *testing.T) {
 	for i := 0; i < len(cases); i++ {
 		str := simpleToMdoc(cases[i][0])
 		expected := cases[i][1]
+		assert.Equal(t, expected, str)
+	}
+}
+
+func TestRpad(t *testing.T) {
+	cases := [][]string{
+		{"foo", "10", "foo       x"},
+		{"foo bar", "10", "foo bar   x"},
+		{"foo bar cat", "10", "foo bar catx"},
+	}
+
+	for i := 0; i < len(cases); i++ {
+		pad, _ := strconv.Atoi(cases[i][1])
+		str := rpad(cases[i][0], pad) + "x"
+		expected := cases[i][2]
+		assert.Equal(t, expected, str)
+	}
+}
+
+func TestTrimRightSpace(t *testing.T) {
+	cases := [][]string{
+		{"foo   ", "foox"},
+		{"foo", "foox"},
+	}
+
+	for i := 0; i < len(cases); i++ {
+		str := trimRightSpace(cases[i][0]) + "x"
+		expected := cases[i][1]
+		assert.Equal(t, expected, str)
+	}
+}
+
+func TestMakeline(t *testing.T) {
+	cases := [][]string{
+		{"foo", "-", "---"},
+		{"foo bar", "*", "*******"},
+	}
+
+	for i := 0; i < len(cases); i++ {
+		str := makeline(cases[i][0], cases[i][1][0])
+		expected := cases[i][2]
 		assert.Equal(t, expected, str)
 	}
 }

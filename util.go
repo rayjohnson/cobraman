@@ -14,17 +14,11 @@
 package cobraman
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/spf13/cobra"
+	"unicode"
 )
-
-type byName []*cobra.Command
-
-func (s byName) Len() int           { return len(s) }
-func (s byName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s byName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
 var multiNewlineRegex = regexp.MustCompile(`\n+\n`)
 
@@ -65,4 +59,22 @@ func dashify(str string) string {
 
 func underscoreify(str string) string {
 	return strings.Replace(str, " ", "_", -1)
+}
+
+func trimRightSpace(s string) string {
+	return strings.TrimRightFunc(s, unicode.IsSpace)
+}
+
+// rpad adds padding to the right of a string.
+func rpad(s string, padding int) string {
+	template := fmt.Sprintf("%%-%ds", padding)
+	return fmt.Sprintf(template, s)
+}
+
+func makeline(str string, char byte) string {
+	b := make([]byte, len(str))
+	for i := range b {
+		b[i] = char
+	}
+	return string(b)
 }

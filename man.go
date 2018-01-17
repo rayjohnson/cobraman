@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"sort"
 	"strings"
 	"time"
 
@@ -162,6 +161,8 @@ type manStruct struct {
 	Files       string
 	Bugs        string
 	Examples    string
+
+	CobraCmd *cobra.Command
 }
 
 type manFlag struct {
@@ -200,6 +201,7 @@ func GenerateOnePage(cmd *cobra.Command, opts *CobraManOptions, templateName str
 		values.CenterFooter = values.Date.Format("Jan 2006")
 	}
 
+	values.CobraCmd = cmd
 	values.ShortDescription = cmd.Short
 	values.UseLine = cmd.UseLine()
 	values.CommandPath = cmd.CommandPath()
@@ -321,7 +323,6 @@ func generateSeeAlsos(cmd *cobra.Command, section string) []seeAlso {
 		}
 		seealsos = append(seealsos, see)
 		siblings := cmd.Parent().Commands()
-		sort.Sort(byName(siblings))
 		for _, c := range siblings {
 			if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() || c.Name() == cmd.Name() {
 				continue
@@ -335,7 +336,6 @@ func generateSeeAlsos(cmd *cobra.Command, section string) []seeAlso {
 		}
 	}
 	children := cmd.Commands()
-	sort.Sort(byName(children))
 	for _, c := range children {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
 			continue
