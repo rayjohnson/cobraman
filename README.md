@@ -15,7 +15,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"github.com/rjohnson/cobraman"
+	"github.com/rayjohnson/cobraman"
 )
 
 func main() {
